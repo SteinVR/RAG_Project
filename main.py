@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from dotenv import load_dotenv
+
 from src.core.config import ConfigManager
 from src.core.pipeline import PipelineResult, RAGPipeline
 from src.utils.logger import configure_logging, get_logger
@@ -39,6 +41,7 @@ def iter_cli_inputs() -> Iterable[str]:
 
 def main() -> None:
     """CLI bootstrap."""
+    load_dotenv()
     config_manager = ConfigManager.load()
     settings = config_manager.settings
     configure_logging(settings)

@@ -136,7 +136,21 @@ class VectorStoreManager:
     def _ensure_vector_store(self) -> Chroma:
         if self._vector_store is not None:
             return self._vector_store
+        
         persist_dir = str(self._config.vector_store.persist_directory)
+        
+        # Handle recreation if requested
+        if self._config.vector_store.recreate:
+            self._logger.warning("Recreate flag is set. Resetting vector store.")
+            import shutil
+            path = Path(persist_dir)
+            if path.exists():
+                shutil.rmtree(path)
+            # Reset the registry as well since we are wiping the DB
+            self._registry = FileRegistry(self._config.paths.file_registry)
+            # Prevent infinite recreation loop in runtime by flipping the flag in memory (optional)
+            # self._config.vector_store.recreate = False 
+
         self._vector_store = Chroma(
             collection_name=self._config.vector_store.collection_name,
             persist_directory=persist_dir,
