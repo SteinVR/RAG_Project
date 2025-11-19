@@ -1,0 +1,30 @@
+[project]
+name = "rag_project"
+version = "0.1.0"
+description = "Modular RAG console application"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain",
+    "langchain-core",
+    "langchain-community",
+    "langchain-text-splitters",
+    "google-genai",
+    "chromadb",
+    "pydantic",
+    "pyyaml",
+    "python-dotenv",
+    "pymupdf",
+    "sentence-transformers",
+    "torch",
+    "numpy",
+    "tenacity",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = []
+

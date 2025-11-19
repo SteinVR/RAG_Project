@@ -1,0 +1,4 @@
+.gitignore
+.env
+AGENT_DESCRIPTION/
+AGENT_TOOLS/

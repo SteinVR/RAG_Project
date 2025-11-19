@@ -1,0 +1,82 @@
+app:
+  name: "Modular RAG Console"
+
+paths:
+  docs_dir: "data/docs"
+  vector_store_dir: "data/vector_store"
+  file_registry: "data/file_registry.json"
+
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] [%(levelname)s] %(name)s - %(message)s"
+  file: "logs/prototype.log"
+
+ingestion:
+  chunk_size: 800
+  chunk_overlap: 150
+  retriever_k: 10
+  glob_patterns:
+    - "*.pdf"
+    - "*.txt"
+    - "*.md"
+
+vector_store:
+  collection_name: "rag_documents"
+  recreate: false
+  embedding_batch_size: 64
+
+embeddings:
+  model_name: "BAAI/bge-m3"
+  device: "cpu"
+  normalize_embeddings: true
+
+llm:
+  provider: "google"
+  model_name: "models/gemini-flash-lite-latest"
+  temperature: 0.2
+  max_output_tokens: 2048
+  api_key_env: "GOOGLE_API_KEY"
+
+modules:
+  rewriter: true
+  hyde: true
+  reranker: true
+
+rewriter:
+  enabled: true
+  prompt_template: |-
+    You are a Query Rewriter for a Retrieval-Augmented Generation pipeline.
+    Classify the user's question using exactly one label from:
+    specific | fuzzy | comparative | procedural | creative.
+    Produce a self-contained rewritten query that can be sent directly to
+    the retriever. Follow the JSON schema in the format instructions.
+  classification_labels:
+    - specific
+    - fuzzy
+    - comparative
+    - procedural
+    - creative
+
+hyde:
+  enabled: true
+  prompt_template: |-
+    You create a concise hypothetical answer to the user's question.
+    Write 2-3 sentences that could plausibly answer the user. Do not add
+    bullet points or citations. The output will be embedded and used only
+    for retrieval seeding.
+  max_tokens: 256
+
+generator:
+  max_context_documents: 4
+  answer_prompt: |-
+    You are the final answer generator in a RAG pipeline. Use the provided
+    context snippets to answer the user's question in Markdown. When you
+    cite a passage, add a bracketed reference like [source:page]. If the
+    answer is unknown, say so explicitly.
+  citations_required: true
+
+reranker:
+  enabled: true
+  model_name: "BAAI/bge-reranker-v2-m3"
+  top_k: 5
+
