@@ -1,0 +1,1 @@
+A folder for storing agents' reused tools, for their task. The scripts in this folder should not be involved in the project logic.
