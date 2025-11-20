@@ -92,11 +92,10 @@ class ModuleToggles(BaseModel):
 
 
 class RewriterSettings(BaseModel):
-    """Prompt and classification rules for the Query Rewriter."""
+    """Prompt template for the Query Rewriter."""
 
     enabled: bool = Field(default=True)
     prompt_template: str
-    classification_labels: List[str]
 
 
 class HydeSettings(BaseModel):

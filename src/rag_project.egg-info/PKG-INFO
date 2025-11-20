@@ -1,3 +1,23 @@
+Metadata-Version: 2.4
+Name: rag_project
+Version: 0.1.0
+Summary: Modular RAG console application
+Requires-Python: <3.14,>=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: langchain
+Requires-Dist: langchain-core
+Requires-Dist: langchain-community
+Requires-Dist: langchain-text-splitters
+Requires-Dist: google-genai
+Requires-Dist: chromadb
+Requires-Dist: pydantic
+Requires-Dist: pyyaml
+Requires-Dist: python-dotenv
+Requires-Dist: pymupdf
+Requires-Dist: sentence-transformers
+Requires-Dist: numpy
+Requires-Dist: tenacity
+
 # Modular RAG Console
 
 Retrieval-Augmented Generation console app that assembles a configurable pipeline (Rewriter → HyDE → Retriever → Reranker → Generator) around a persistent local Chroma vector store.

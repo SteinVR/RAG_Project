@@ -3,7 +3,7 @@ name = "rag_project"
 version = "0.1.0"
 description = "Modular RAG console application"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "langchain",
     "langchain-core",
@@ -16,15 +16,19 @@ dependencies = [
     "python-dotenv",
     "pymupdf",
     "sentence-transformers",
-    "torch",
     "numpy",
     "tenacity",
 ]
+
+# Note: PyTorch should be installed separately based on your hardware.
+# See README.md for platform-specific installation instructions.
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.uv]
-dev-dependencies = []
+dev-dependencies = [
+    "pytest",
+]
 

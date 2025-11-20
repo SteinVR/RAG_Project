@@ -9,6 +9,7 @@ from sentence_transformers import CrossEncoder
 
 from src.core.config import AppConfig, ConfigManager
 from src.modules.base import PipelineModule
+from src.utils.device import resolve_device
 
 
 class Reranker(PipelineModule):
@@ -17,9 +18,12 @@ class Reranker(PipelineModule):
     def __init__(self, config: Optional[AppConfig] = None) -> None:
         """Load the configured cross-encoder model."""
         super().__init__(config or ConfigManager.load().settings)
+        # Resolve device for optimal hardware acceleration
+        device = resolve_device(self.config.embeddings.device)
+        self.logger.info(f"Initializing reranker on device: {device}")
         self._model = CrossEncoder(
             self.config.reranker.model_name,
-            device=self.config.embeddings.device,
+            device=device,
         )
 
     def is_enabled(self) -> bool:
@@ -28,15 +32,20 @@ class Reranker(PipelineModule):
 
     def rerank(self, query: str, documents: Sequence[Document]) -> List[Document]:
         """Return the top documents sorted by cross-encoder score."""
+        results = self.rerank_with_scores(query, documents)
+        return [doc for doc, _ in results]
+    
+    def rerank_with_scores(self, query: str, documents: Sequence[Document]) -> List[Tuple[Document, float]]:
+        """Return the top documents with their scores sorted by cross-encoder score."""
         if not self.is_enabled() or not documents:
-            return list(documents)
+            return [(doc, 0.0) for doc in documents]
 
         pairs = [(query, doc.page_content) for doc in documents]
         scores = self._model.predict(pairs)
         scored_docs: List[Tuple[float, Document]] = list(zip(scores, documents))
         scored_docs.sort(key=lambda pair: pair[0], reverse=True)
         top_k = self.config.reranker.top_k
-        reranked = [doc for _, doc in scored_docs[:top_k]]
+        reranked = [(doc, float(score)) for score, doc in scored_docs[:top_k]]
         self.logger.info("Reranked %d documents using the cross-encoder", len(reranked))
         return reranked
 

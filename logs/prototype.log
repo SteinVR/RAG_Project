@@ -1,0 +1,226 @@
+[2025-11-20 14:51:15,139] [INFO] DocumentLoader - Loaded note.txt (1 documents)
+[2025-11-20 14:51:15,140] [INFO] DocumentLoader - Loaded empty.txt (0 documents)
+[2025-11-20 14:51:15,176] [INFO] VectorStoreManager - Initializing embeddings on device: cpu
+[2025-11-20 14:51:15,177] [INFO] DocumentLoader - Loaded note.txt (1 documents)
+[2025-11-20 14:51:15,177] [INFO] VectorStoreManager - Clearing existing chunks for note.txt
+[2025-11-20 14:51:15,177] [INFO] VectorStoreManager - Adding 1 chunks from note.txt
+[2025-11-20 14:51:15,179] [INFO] VectorStoreManager - Initializing embeddings on device: cpu
+[2025-11-20 14:51:15,179] [INFO] DocumentLoader - Loaded orphan.txt (1 documents)
+[2025-11-20 14:51:15,179] [INFO] VectorStoreManager - Clearing existing chunks for orphan.txt
+[2025-11-20 14:51:15,179] [INFO] VectorStoreManager - Adding 1 chunks from orphan.txt
+[2025-11-20 14:51:15,180] [INFO] VectorStoreManager - Removing stale source orphan.txt
+[2025-11-20 14:55:15,238] [INFO] DocumentLoader - Loaded note.txt (1 documents)
+[2025-11-20 14:55:15,240] [INFO] DocumentLoader - Loaded empty.txt (0 documents)
+[2025-11-20 14:55:15,247] [INFO] VectorStoreManager - Initializing embeddings on device: cpu
+[2025-11-20 14:55:15,248] [INFO] DocumentLoader - Loaded note.txt (1 documents)
+[2025-11-20 14:55:15,248] [INFO] VectorStoreManager - Clearing existing chunks for note.txt
+[2025-11-20 14:55:15,248] [INFO] VectorStoreManager - Adding 1 chunks from note.txt
+[2025-11-20 14:55:15,250] [INFO] VectorStoreManager - Initializing embeddings on device: cpu
+[2025-11-20 14:55:15,250] [INFO] DocumentLoader - Loaded orphan.txt (1 documents)
+[2025-11-20 14:55:15,250] [INFO] VectorStoreManager - Clearing existing chunks for orphan.txt
+[2025-11-20 14:55:15,250] [INFO] VectorStoreManager - Adding 1 chunks from orphan.txt
+[2025-11-20 14:55:15,251] [INFO] VectorStoreManager - Removing stale source orphan.txt
+[2025-11-20 14:58:38,074] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 14:58:38,074] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 14:58:38,074] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 15:09:20,127] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:09:20,127] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 15:20:00,070] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 15:20:00,902] [INFO] DocumentLoader - Loaded 10.1.1.5.8583.pdf (24 documents)
+[2025-11-20 15:20:00,902] [INFO] VectorStoreManager - Clearing existing chunks for 10.1.1.5.8583.pdf
+[2025-11-20 15:20:00,906] [INFO] VectorStoreManager - Adding 53 chunks from 10.1.1.5.8583.pdf
+[2025-11-20 15:20:20,856] [INFO] DocumentLoader - Loaded 2024.emnlp-industry.116 (3).pdf (11 documents)
+[2025-11-20 15:20:20,857] [INFO] VectorStoreManager - Clearing existing chunks for 2024.emnlp-industry.116 (3).pdf
+[2025-11-20 15:20:20,860] [INFO] VectorStoreManager - Adding 69 chunks from 2024.emnlp-industry.116 (3).pdf
+[2025-11-20 15:20:40,573] [INFO] DocumentLoader - Loaded 21275887.pdf (126 documents)
+[2025-11-20 15:20:40,573] [INFO] VectorStoreManager - Clearing existing chunks for 21275887.pdf
+[2025-11-20 15:20:40,590] [INFO] VectorStoreManager - Adding 583 chunks from 21275887.pdf
+[2025-11-20 15:24:19,861] [INFO] DocumentLoader - Loaded 2212.10496v1.pdf (11 documents)
+[2025-11-20 15:24:19,863] [INFO] VectorStoreManager - Clearing existing chunks for 2212.10496v1.pdf
+[2025-11-20 15:24:19,870] [INFO] VectorStoreManager - Adding 67 chunks from 2212.10496v1.pdf
+[2025-11-20 15:24:40,265] [INFO] DocumentLoader - Loaded 2410.21228v1 (1).pdf (21 documents)
+[2025-11-20 15:24:40,265] [INFO] VectorStoreManager - Clearing existing chunks for 2410.21228v1 (1).pdf
+[2025-11-20 15:24:40,268] [INFO] VectorStoreManager - Adding 97 chunks from 2410.21228v1 (1).pdf
+[2025-11-20 15:25:14,267] [INFO] DocumentLoader - Loaded ВКР_Логинов_5030103_80101_Final.pdf (41 documents)
+[2025-11-20 15:25:14,268] [INFO] VectorStoreManager - Clearing existing chunks for ВКР_Логинов_5030103_80101_Final.pdf
+[2025-11-20 15:25:14,272] [INFO] VectorStoreManager - Adding 85 chunks from ВКР_Логинов_5030103_80101_Final.pdf
+[2025-11-20 15:25:44,250] [INFO] RAGPipeline - Vector store synchronized (added=954 removed=0)
+[2025-11-20 15:27:14,864] [INFO] RAGPipeline - Running QueryRewriter
+[2025-11-20 15:27:14,874] [ERROR] CLI - Pipeline execution failed: 'Input to ChatPromptTemplate is missing variables {\'"foo"\', \'"description"\', \'"properties"\'}.  Expected: [\'"description"\', \'"foo"\', \'"properties"\'] Received: [\'query\']\nNote: if you intended {"foo"} to be part of the string and not a variable, please escape it with double curly braces like: \'{{"foo"}}\'.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/INVALID_PROMPT_INPUT '
+Traceback (most recent call last):
+  File "/Users/steinv/Projects/RAG_Project/main.py", line 56, in main
+    result = pipeline.execute(user_input)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/src/core/pipeline.py", line 58, in execute
+    rewrite = self._run_rewriter(query)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/src/core/pipeline.py", line 77, in _run_rewriter
+    return self._rewriter.rewrite(query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/src/modules/rewriter.py", line 48, in rewrite
+    result = self._chain.invoke({"query": query})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/runnables/base.py", line 3127, in invoke
+    input_ = context.run(step.invoke, input_, config, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/prompts/base.py", line 217, in invoke
+    return self._call_with_config(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/runnables/base.py", line 2050, in _call_with_config
+    context.run(
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/runnables/config.py", line 428, in call_func_with_variable_args
+    return func(input, **kwargs)  # type: ignore[call-arg]
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/prompts/base.py", line 190, in _format_prompt_with_error_handling
+    inner_input_ = self._validate_input(inner_input)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/steinv/Projects/RAG_Project/.venv/lib/python3.12/site-packages/langchain_core/prompts/base.py", line 184, in _validate_input
+    raise KeyError(
+KeyError: 'Input to ChatPromptTemplate is missing variables {\'"foo"\', \'"description"\', \'"properties"\'}.  Expected: [\'"description"\', \'"foo"\', \'"properties"\'] Received: [\'query\']\nNote: if you intended {"foo"} to be part of the string and not a variable, please escape it with double curly braces like: \'{{"foo"}}\'.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/INVALID_PROMPT_INPUT '
+[2025-11-20 15:34:57,990] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:34:57,990] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 15:34:57,991] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 15:35:02,528] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:35:02,528] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 15:35:08,716] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 15:35:08,823] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 15:36:00,389] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:36:00,390] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 15:36:00,390] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 15:36:04,947] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:36:04,947] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 15:36:10,776] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 15:36:10,883] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 15:36:10,883] [INFO] RAGPipeline - Running QueryRewriter
+[2025-11-20 15:38:16,956] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:38:16,956] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 15:38:16,956] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 15:38:21,568] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:38:21,568] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 15:38:27,854] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 15:38:27,963] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 15:58:40,093] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:58:40,093] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 15:58:40,094] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 15:58:45,229] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 15:58:45,231] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 15:58:51,084] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 15:58:51,318] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 15:59:15,519] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 15:59:18,807] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 15:59:18,821] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 15:59:20,739] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:02:23,510] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:02:26,464] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:02:26,467] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:02:27,179] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:02:45,524] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:02:48,245] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:02:48,248] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:02:50,367] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:04:36,986] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:04:36,986] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:04:36,987] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:04:42,144] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:04:42,145] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:04:47,960] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 16:04:48,069] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:04:52,296] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:04:55,348] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:04:55,367] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:04:57,689] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:15:01,987] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:15:01,987] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:15:01,988] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:15:07,023] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:15:07,023] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:15:13,232] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 16:15:13,342] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:15:14,697] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:15:14,706] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:15:15,706] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:15:15,719] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161515_717912.json
+[2025-11-20 16:15:15,740] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:15:15,740] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:15:15,741] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:15:23,477] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:15:23,477] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:15:30,389] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:15:30,389] [INFO] RAGPipeline - Running QueryRewriter
+[2025-11-20 16:15:30,391] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:15:31,059] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:15:31,068] [INFO] RAGPipeline - Running HyDE generator
+[2025-11-20 16:15:31,069] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:15:31,893] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:15:37,021] [INFO] RAGPipeline - Retrieved 19 unique documents
+[2025-11-20 16:15:42,632] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:15:42,635] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:15:43,801] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:15:43,816] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161543_814965.json
+[2025-11-20 16:16:28,482] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:16:28,482] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:16:28,483] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:16:32,917] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 16:17:06,752] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:06,752] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:17:06,753] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:17:10,775] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:10,775] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:17:16,437] [INFO] chromadb.telemetry.product.posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[2025-11-20 16:17:16,563] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:17:17,548] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:17:17,555] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:17:19,062] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:17:19,073] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161719_072447.json
+[2025-11-20 16:17:19,091] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:19,092] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:17:19,092] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:17:24,920] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:24,920] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:17:32,132] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:17:33,174] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:17:36,459] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:17:36,467] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:17:37,514] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:17:37,531] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161737_529385.json
+[2025-11-20 16:17:37,547] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:37,547] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:17:37,547] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:17:46,698] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:17:46,699] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:18:07,092] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:18:07,092] [INFO] RAGPipeline - Running HyDE generator
+[2025-11-20 16:18:07,095] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:18:07,854] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:18:10,931] [INFO] RAGPipeline - Retrieved 18 unique documents
+[2025-11-20 16:18:10,933] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:18:12,178] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:18:12,193] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161812_190736.json
+[2025-11-20 16:18:12,231] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:18:12,232] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:18:12,233] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:18:23,148] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:18:23,149] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:18:37,401] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:18:37,402] [INFO] RAGPipeline - Running HyDE generator
+[2025-11-20 16:18:37,403] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:18:38,204] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:18:39,852] [INFO] RAGPipeline - Retrieved 19 unique documents
+[2025-11-20 16:18:54,226] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:18:54,230] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:18:55,473] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:18:55,485] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161855_483687.json
+[2025-11-20 16:18:55,508] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:18:55,508] [INFO] VectorStoreManager - Initializing embeddings on device: mps
+[2025-11-20 16:18:55,508] [INFO] sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: BAAI/bge-m3
+[2025-11-20 16:19:06,692] [INFO] src.utils.device - Using explicitly configured MPS device (Apple Silicon)
+[2025-11-20 16:19:06,692] [INFO] Reranker - Initializing reranker on device: mps
+[2025-11-20 16:19:16,063] [INFO] RAGPipeline - Vector store synchronized (added=0 removed=0)
+[2025-11-20 16:19:16,065] [INFO] RAGPipeline - Running QueryRewriter
+[2025-11-20 16:19:16,084] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:19:16,513] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:19:20,459] [INFO] RAGPipeline - Retrieved 10 unique documents
+[2025-11-20 16:19:25,623] [INFO] Reranker - Reranked 5 documents using the cross-encoder
+[2025-11-20 16:19:25,627] [INFO] google_genai.models - AFC is enabled with max remote calls: 10.
+[2025-11-20 16:19:26,900] [INFO] httpx - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent "HTTP/1.1 200 OK"
+[2025-11-20 16:19:26,920] [INFO] RAGPipeline - Pipeline execution log saved to logs/pipeline/query_20251120_161926_919002.json

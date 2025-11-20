@@ -13,7 +13,9 @@ from src.modules.generator import Generator, AnswerSchema
 from src.modules.hyde import HyDEGenerator
 from src.modules.reranker import Reranker
 from src.modules.rewriter import QueryRewriter, RewriteResult
+from src.utils.console import ConsoleProgress
 from src.utils.logger import get_logger
+from src.utils.pipeline_logger import PipelineLogger
 
 
 @dataclass
@@ -22,7 +24,8 @@ class PipelineResult:
 
     question: str
     rewritten_query: str
-    classification: str
+    rewrite_decision: str
+    hyde_seed_query: str
     hyde_prompt: str
     context: List[Document]
     answer: AnswerSchema
@@ -31,9 +34,11 @@ class PipelineResult:
 class RAGPipeline:
     """High-level orchestrator used by the CLI or other front-ends."""
 
-    def __init__(self, config: Optional[AppConfig] = None) -> None:
+    def __init__(self, config: Optional[AppConfig] = None, show_progress: bool = True, enable_pipeline_logging: bool = False) -> None:
         self._config = config or ConfigManager.load().settings
         self._logger = get_logger(self.__class__.__name__)
+        self._progress = ConsoleProgress(enabled=show_progress)
+        self._pipeline_logger = PipelineLogger() if enable_pipeline_logging else None
         self._vector_store_manager = VectorStoreManager(self._config)
         self._rewriter = QueryRewriter(self._config)
         self._hyde = HyDEGenerator(self._config)
@@ -43,56 +48,121 @@ class RAGPipeline:
         self._prepare_vector_store()
 
     def _prepare_vector_store(self) -> None:
-        stats = self._vector_store_manager.sync()
-        self._retriever = self._vector_store_manager.as_retriever(
-            search_kwargs={"k": self._config.ingestion.retriever_k},
-        )
-        self._logger.info(
-            "Vector store synchronized (added=%s removed=%s)",
-            stats["added_chunks"],
-            stats["removed_sources"],
-        )
+        with self._progress.stage("Vector store synchronization"):
+            stats = self._vector_store_manager.sync()
+            self._retriever = self._vector_store_manager.as_retriever(
+                search_kwargs={"k": self._config.ingestion.retriever_k},
+            )
+            self._logger.info(
+                "Vector store synchronized (added=%s removed=%s)",
+                stats["added_chunks"],
+                stats["removed_sources"],
+            )
+        if stats["added_chunks"] > 0 or stats["removed_sources"] > 0:
+            self._progress.info(
+                f"Indexed {stats['added_chunks']} chunks, removed {stats['removed_sources']} sources"
+            )
 
     def execute(self, query: str) -> PipelineResult:
         """Run the end-to-end pipeline for a user query."""
-        rewrite = self._run_rewriter(query)
-        effective_query = rewrite.rewritten_query if rewrite else query
-        classification = rewrite.classification if rewrite else "direct"
-        hyde_prompt = self._run_hyde(effective_query)
-        documents = self._retrieve_documents(effective_query, hyde_prompt)
-        answer = self._generator.generate(query, documents)
-        return PipelineResult(
-            question=query,
-            rewritten_query=effective_query,
-            classification=classification,
-            hyde_prompt=hyde_prompt,
-            context=documents,
-            answer=answer,
-        )
+        if self._pipeline_logger:
+            self._pipeline_logger.start_query(
+                query=query,
+                rewriter_enabled=self._rewriter.is_enabled(),
+                hyde_enabled=self._hyde.is_enabled(),
+                reranker_enabled=self._reranker.is_enabled(),
+            )
+        
+        with self._progress.stage("Processing query"):
+            hyde_enabled = self._hyde.is_enabled()
+            rewrite = self._run_rewriter(query, hyde_enabled)
+            effective_query = rewrite.retriever_query if rewrite else query
+            rewrite_decision = rewrite.rewrite_decision if rewrite else "use_original"
+            hyde_seed = ""
+            if hyde_enabled:
+                if rewrite and rewrite.hyde_query.strip():
+                    hyde_seed = rewrite.hyde_query.strip()
+                else:
+                    hyde_seed = effective_query
+            hyde_prompt = self._run_hyde(hyde_seed, query)
+            documents = self._retrieve_documents(effective_query, hyde_prompt)
+            
+            if self._pipeline_logger:
+                self._pipeline_logger.log_final_chunks(documents)
+            
+            with self._progress.stage("Generating answer"):
+                answer = self._generator.generate(query, documents)
+            
+            if self._pipeline_logger:
+                self._pipeline_logger.log_answer(answer.answer_markdown)
+                log_file = self._pipeline_logger.save()
+                self._logger.info("Pipeline execution log saved to %s", log_file)
+            
+            return PipelineResult(
+                question=query,
+                rewritten_query=effective_query,
+                rewrite_decision=rewrite_decision,
+                hyde_seed_query=hyde_seed,
+                hyde_prompt=hyde_prompt,
+                context=documents,
+                answer=answer,
+            )
 
-    def _run_rewriter(self, query: str) -> Optional[RewriteResult]:
+    def _run_rewriter(self, query: str, hyde_enabled: bool) -> Optional[RewriteResult]:
         if not self._rewriter.is_enabled():
             return None
-        self._logger.info("Running QueryRewriter")
-        return self._rewriter.rewrite(query)
+        with self._progress.stage("Query rewriting"):
+            self._logger.info("Running QueryRewriter")
+            result = self._rewriter.rewrite(query, hyde_enabled=hyde_enabled)
+            if self._pipeline_logger and result:
+                self._pipeline_logger.log_rewriter(
+                    decision=result.rewrite_decision,
+                    retriever_query=result.retriever_query,
+                    hyde_seed=result.hyde_query if hyde_enabled else "",
+                    rationale=result.rationale,
+                )
+            return result
 
-    def _run_hyde(self, query: str) -> str:
+    def _run_hyde(self, hyde_seed: str, original_question: str) -> str:
         if not self._hyde.is_enabled():
             return ""
-        self._logger.info("Running HyDE generator")
-        return self._hyde.generate(query)
+        with self._progress.stage("HyDE generation"):
+            self._logger.info("Running HyDE generator")
+            hyde_answer = self._hyde.generate(hyde_seed, original_question)
+            if self._pipeline_logger:
+                self._pipeline_logger.log_hyde(hyde_answer)
+            return hyde_answer
 
     def _retrieve_documents(self, query: str, hyde_prompt: str) -> List[Document]:
         if self._retriever is None:
             raise RuntimeError("Retriever not initialized. Call _prepare_vector_store first.")
-        base_results: List[Document] = list(self._invoke_retriever(query))
-        hyde_results: List[Document] = []
-        if hyde_prompt:
-            hyde_results = list(self._invoke_retriever(hyde_prompt))
-        combined = self._deduplicate(base_results + hyde_results)
-        self._logger.info("Retrieved %d unique documents", len(combined))
+        
+        with self._progress.stage("Document retrieval"):
+            base_results: List[Document] = list(self._invoke_retriever(query))
+            if self._pipeline_logger:
+                self._pipeline_logger.log_base_retrieval(base_results)
+            
+            hyde_results: List[Document] = []
+            if hyde_prompt:
+                hyde_results = list(self._invoke_retriever(hyde_prompt))
+                if self._pipeline_logger:
+                    self._pipeline_logger.log_hyde_retrieval(hyde_results)
+            
+            combined = self._deduplicate(base_results + hyde_results)
+            self._logger.info("Retrieved %d unique documents", len(combined))
+            
+            if self._pipeline_logger:
+                self._pipeline_logger.log_combined_count(len(combined))
+        
         if self._reranker.is_enabled():
-            combined = self._reranker.rerank(query, combined)
+            with self._progress.stage("Reranking documents", f"{len(combined)} candidates"):
+                combined_with_scores = self._reranker.rerank_with_scores(query, combined)
+                combined = [doc for doc, _ in combined_with_scores]
+                scores = [score for _, score in combined_with_scores]
+                
+                if self._pipeline_logger:
+                    self._pipeline_logger.log_reranker(combined, scores)
+        
         return combined
 
     def _invoke_retriever(self, query: str) -> Sequence[Document]:

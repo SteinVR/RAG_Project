@@ -18,7 +18,9 @@ class HyDEGenerator(PipelineModule):
         super().__init__(config or ConfigManager.load().settings)
         llm_factory = LLMClientFactory(self.config)
         self._prompt = ChatPromptTemplate.from_template(
-            f"{self.config.hyde.prompt_template}\n\nUser question: {{query}}",
+            f"{self.config.hyde.prompt_template}\n\n"
+            "Directive: {{directive}}\n"
+            "Original question: {{question}}",
         )
         self._llm = llm_factory.build_chat_model(
             max_output_tokens=self.config.hyde.max_tokens,
@@ -28,11 +30,16 @@ class HyDEGenerator(PipelineModule):
         """Return whether HyDE is globally enabled."""
         return self.config.modules.hyde and self.config.hyde.enabled
 
-    def generate(self, query: str) -> str:
+    def generate(self, directive: str, question: str) -> str:
         """Generate a hypothetical answer for the supplied query."""
         if not self.is_enabled():
             return ""
         response = self._prompt | self._llm
-        result = response.invoke({"query": query})
+        result = response.invoke(
+            {
+                "directive": directive.strip(),
+                "question": question,
+            },
+        )
         return result.content.strip() if hasattr(result, "content") else str(result).strip()
 

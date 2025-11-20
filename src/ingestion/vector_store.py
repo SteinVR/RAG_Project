@@ -15,6 +15,7 @@ from langchain_community.vectorstores import Chroma
 from src.core.config import AppConfig, ConfigManager
 from src.ingestion.loader import DocumentLoader
 from src.utils.logger import get_logger
+from src.utils.device import resolve_device
 
 
 class FileRegistry:
@@ -51,7 +52,12 @@ class FileRegistry:
     def removed_entries(self, active_paths: Iterable[str]) -> List[str]:
         """Return registry entries that point to missing files."""
         active = set(active_paths)
-        return [key for key in list(self._data.keys()) if key not in active]
+        removed = [key for key in list(self._data.keys()) if key not in active]
+        if removed:
+            for key in removed:
+                self._data.pop(key, None)
+            self.save()
+        return removed
 
     def save(self) -> None:
         """Persist the registry JSON to disk."""
@@ -93,9 +99,12 @@ class VectorStoreManager:
             chunk_size=self._config.ingestion.chunk_size,
             chunk_overlap=self._config.ingestion.chunk_overlap,
         )
+        # Resolve device for optimal hardware acceleration
+        device = resolve_device(self._config.embeddings.device)
+        self._logger.info(f"Initializing embeddings on device: {device}")
         self._embeddings = HuggingFaceEmbeddings(
             model_name=self._config.embeddings.model_name,
-            model_kwargs={"device": self._config.embeddings.device},
+            model_kwargs={"device": device},
             encode_kwargs={"normalize_embeddings": self._config.embeddings.normalize_embeddings},
         )
         self._vector_store: Optional[Chroma] = None

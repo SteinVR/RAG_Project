@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 from src.core.config import ConfigManager
 from src.core.pipeline import PipelineResult, RAGPipeline
+from src.utils.console import ConsoleProgress
 from src.utils.logger import configure_logging, get_logger
 
 
@@ -41,20 +42,37 @@ def iter_cli_inputs() -> Iterable[str]:
 
 def main() -> None:
     """CLI bootstrap."""
-    load_dotenv()
-    config_manager = ConfigManager.load()
-    settings = config_manager.settings
-    configure_logging(settings)
-    logger = get_logger("CLI")
-    pipeline = RAGPipeline(settings)
-    print("Modular RAG Console (type 'exit' to quit)")
+    progress = ConsoleProgress()
+    
+    print("=" * 60)
+    print("Modular RAG Console")
+    print("=" * 60)
+    
+    with progress.stage("Loading environment"):
+        load_dotenv()
+    
+    with progress.stage("Loading configuration"):
+        config_manager = ConfigManager.load()
+        settings = config_manager.settings
+        configure_logging(settings)
+        logger = get_logger("CLI")
+    
+    with progress.stage("Initializing pipeline"):
+        pipeline = RAGPipeline(settings, show_progress=True)
+    
+    progress.info("Ready! Type your question or 'exit' to quit")
+    print("=" * 60)
+    
     for user_input in iter_cli_inputs():
         if user_input.lower() in EXIT_COMMANDS:
-            print("Goodbye!")
+            print("\nGoodbye!")
             break
         try:
+            print()
             result = pipeline.execute(user_input)
+            print("\n" + "=" * 60)
             print(format_answer(result))
+            print("=" * 60)
         except Exception as exc:  # pragma: no cover - interactive safeguard
             logger.exception("Pipeline execution failed: %s", exc)
             print("An error occurred. Check logs/prototype.log for details.")

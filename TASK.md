@@ -21,7 +21,7 @@
 ### Phase 3: RAG Modules
 - [ ] **Base Interfaces**: Define interfaces for pipeline components if necessary.
 - [ ] **Generator**: Implement `src/modules/generator.py` (Gemini integration).
-- [ ] **Rewriter**: Implement `src/modules/rewriter.py` (Classification + Rewrite logic).
+- [ ] **Rewriter**: Implement `src/modules/rewriter.py` (Rewrite guard + HyDE directive).
 - [ ] **HyDE**: Implement `src/modules/hyde.py`.
 - [ ] **Reranker**: Implement `src/modules/reranker.py` (CrossEncoder).
 
@@ -33,8 +33,9 @@
 
 
 ### Phase 5: Polish
-- [ ] **Testing**: Verify toggling modules in `settings.yaml`.
-- [ ] **Documentation**: Add usage instructions to README (optional).
+- [x] **Testing**: Verify toggling modules in `settings.yaml`.
+- [x] **Documentation**: Add usage instructions to README (optional).
+- [x] **Environment Optimization**: Multi-platform GPU acceleration support (M1 MPS + NVIDIA CUDA).
 
 ---
 
@@ -43,7 +44,7 @@
 
 > Purpose: The single active task being worked on right now.
 
-> **Current Task:** Phase 4: Orchestration & CLI, Phase 5: Polish
+> **Current Task:** Refresh prompts + rewriter behavior for RAG modules.
 
 ---
 
@@ -53,6 +54,8 @@
 > Purpose: The Lead Engineer's dynamic plan for the Current Task in Focus. This section will be cleared and re-written for each new task 
 from the backlog.
 > 
-- [x] Phase 4: implement `src/core/pipeline.py` orchestrating ingestion, modules, and retrieval
-- [x] Phase 4: add `main.py` CLI wiring + logging/bootstrap
-- [x] Phase 5: document env setup, add uv/pyproject + README + API key template
+- [x] Audit existing prompts and module flow (rewriter, HyDE, generator)
+- [x] Design improved prompt briefs + JSON schemas per module
+- [x] Update code/config to use new prompts and dual-mode rewriting
+- [x] Adjust pipeline logic for HyDE-aware rewrite decisions
+- [x] Smoke test modules and document rationale

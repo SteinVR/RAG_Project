@@ -27,7 +27,9 @@ vector_store:
 
 embeddings:
   model_name: "BAAI/bge-m3"
-  device: "cpu"
+  # Device options: "cuda" (NVIDIA GPU), "mps" (Apple Silicon), "cpu", or "auto"
+  # Run: python AGENT_TOOLS/detect_device.py to find your optimal setting
+  device: "mps"
   normalize_embeddings: true
 
 llm:
@@ -45,34 +47,46 @@ modules:
 rewriter:
   enabled: true
   prompt_template: |-
-    You are a Query Rewriter for a Retrieval-Augmented Generation pipeline.
-    Classify the user's question using exactly one label from:
-    specific | fuzzy | comparative | procedural | creative.
-    Produce a self-contained rewritten query that can be sent directly to
-    the retriever. Follow the JSON schema in the format instructions.
-  classification_labels:
-    - specific
-    - fuzzy
-    - comparative
-    - procedural
-    - creative
+    You run the Query Rewrite Guard for a retrieval-augmented QA system.
+    Objectives:
+      1. Decide whether the user's wording must be rewritten before dense retrieval.
+      2. When HyDE is enabled (`hyde_enabled=true`), craft a concise directive for the HyDE generator.
+    Guardrails:
+      - Never invent facts, identifiers, version numbers, or file names that the user did not supply.
+      - Prefer the original wording when it is already specific (contains key entities, file names, error codes, or metrics).
+      - Rewrite only to expand acronyms, resolve pronouns, or add neutral descriptors (e.g., replace "our product" with "the product described in the documentation").
+      - Keep every output self-contained and under 40 words.
+    Output schema (see format instructions):
+      - `rewrite_decision`: `use_original` or `rewrite`.
+      - `retriever_query`: final query for the dense retriever.
+      - `hyde_query`: when HyDE is enabled, supply a short imperative such as "Produce a hypothetical answer about …"; leave empty when HyDE is disabled.
+      - `rationale`: <= 20 words explaining the choice.
+    Procedure:
+      - Identify missing context or ambiguous pronouns and only add neutral clarifications grounded in the question.
+      - If the query is already explicit, keep it unchanged.
+      - HyDE directives must stay broad enough to match multiple documents and must not introduce new fictional facts.
 
 hyde:
   enabled: true
   prompt_template: |-
-    You create a concise hypothetical answer to the user's question.
-    Write 2-3 sentences that could plausibly answer the user. Do not add
-    bullet points or citations. The output will be embedded and used only
-    for retrieval seeding.
+    You are the HyDE imagination helper. Combine the provided directive (if any) with the original question to draft a hypothetical answer.
+    Requirements:
+      - Write 2 short sentences that could plausibly appear in neutral technical documentation.
+      - Mention the core subject and one or two salient facts or steps.
+      - Use only broadly known knowledge or information implied by the inputs; never invent internal names or proprietary data.
+      - Keep the tone factual and avoid bullet points or citations. The text will be embedded for retrieval only.
   max_tokens: 256
 
 generator:
   max_context_documents: 4
   answer_prompt: |-
-    You are the final answer generator in a RAG pipeline. Use the provided
-    context snippets to answer the user's question in Markdown. When you
-    cite a passage, add a bracketed reference like [source:page]. If the
-    answer is unknown, say so explicitly.
+    You are the final synthesis model in a Retrieval-Augmented QA assistant.
+    Use only the supplied context snippets.
+    Instructions:
+      - Start with a concise paragraph that directly answers the question.
+      - When multiple takeaways exist, follow with a short bulleted list (max 4 bullets).
+      - Attribute every factual statement with a citation formatted as [source:<index>] where <index> matches the numbered context block.
+      - If the answer cannot be found in the context, say so explicitly and avoid speculation.
   citations_required: true
 
 reranker:
