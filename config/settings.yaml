@@ -48,47 +48,67 @@ modules:
 rewriter:
   enabled: true
   prompt_template: |-
-    You are an expert Search Query Optimizer. Your goal is to refine user questions for a semantic search engine.
+    You are a Universal Search Query Optimizer.
+    
+    Goal: Refine the user's input to maximize retrieval accuracy from a vector database containing documents from VARIOUS domains (General, Technical, Legal, Scientific, etc.).
 
-    Input Analysis:
-    1. Read the user's query carefully.
-    2. Identify ambiguous pronouns (it, he, they), missing context, or casual phrasing.
-    3. Detect the language of the user's query.
+    Internal Reasoning (for 'rationale'):
+    1. Identify Core Entities: What is the main subject?
+    2. Infer Context: What vocabulary is typically used in documents discussing this subject?
+    3. Safety Check: If the intent is ambiguous, DO NOT add guessed keywords to avoid vector drift.
 
-    Actions:
-    - If the query is specific and clear (contains identifiers, specific terms, names like "Loginov", "GOST", "ISO"):
-      Set "rewrite_decision" to "use_original".
-    - If the query is vague or relies on previous context that is missing:
-      Rewrite it to be self-contained and specific.
-      CRITICAL: The rewritten query MUST be in the SAME LANGUAGE as the original user query.
+    Directives:
+    1. PRESERVE LANGUAGE: Russian -> Russian, English -> English.
+    2. STRIP NOISE: Remove conversational fillers ("Hello", "find me").
+    3. CONTEXTUAL EXPANSION: Add 2-3 high-value keywords that are semantically necessary for the answer.
+       - Example (Medical): "headache" -> add "migraine symptoms treatment"
+       - Example (Legal): "tenant didn't pay" -> add "lease agreement eviction breach"
+       - Example (General): "best time to visit Japan" -> add "weather seasons tourism"
+    4. FORMULATION: Output a keyword-dense string.
 
-    HyDE Directive (only if {{hyde_enabled}} is true):
-    - Create a short instruction for a technical writer to draft an answer document.
-    - Example: "Write a technical description of the X standard."
+    Few-Shot Examples:
 
-    Output Format:
-    Return strictly a JSON object matching the provided schema.
-    - rationale: Brief explanation of why you rewrote or kept the original.
-    - retriever_query: Self-contained query to send to the dense retriever.
-    - hyde_query: Directive for the HyDE module when enabled, else empty.
+    User: "почему не заводится машина зимой?"
+    Result: {
+      "rationale": "Subject: Car maintenance. Context: Automotive/Mechanics. Keywords: Battery, Spark plugs, Oil viscosity.",
+      "rewrite_decision": "rewrite",
+      "retriever_query": "машина не заводится зимой причины аккумулятор свечи масло стартер",
+      "hyde_query": "Руководство по диагностике запуска двигателя при низких температурах"
+    }
+
+    User: "refund policy for digital goods"
+    Result: {
+      "rationale": "Subject: E-commerce/Legal. Context: Terms of Service. Keywords: Return, Period, Exceptions.",
+      "rewrite_decision": "rewrite",
+      "retriever_query": "refund policy digital goods return terms non-refundable conditions",
+      "hyde_query": "Standard terms and conditions regarding refunds for digital products"
+    }
 
 hyde:
   enabled: true
   prompt_template: |-
-    You are an Expert Technical Writer tasked with drafting a snippet for a documentation knowledge base.
+    You are a Knowledge Base Simulator.
+    Task: Write a hypothetical document snippet that provides the PERFECT answer to the User Question.
     
-    Task:
-    Based on the User Question and the optional Directive, write a HYPOTHETICAL document passage that answers the question.
+    Critical Rule: ADAPT YOUR STYLE TO THE QUESTION'S DOMAIN.
+    - If the question is scientific -> write like a research paper.
+    - If the question is casual -> write like a helpful blog post or FAQ.
+    - If the question is legal -> write like a contract or law text.
     
-    Rules:
-    1. Do NOT converse with the user. Do NOT say "Here is the answer".
-    2. Write only the content of the hypothetical document passage.
-    3. Use professional, technical language.
-    4. Include plausible keywords related to the topic (e.g., standard codes, technical terms).
-    5. Keep it under 5-6 sentences.
-    6. MUST be in the SAME LANGUAGE as the Original Question.
+    Guidelines:
+    1. Language: STRICTLY matches the User Question.
+    2. Length: 1 concise paragraph (high information density).
+    3. Content: Use vocabulary and phrasing typical for the implied topic. DO NOT converse with the user.
 
-    Context:
+    Examples:
+    
+    Question: "How to center a div?"
+    Hypothetical Snippet: "To center a div element horizontally and vertically using Flexbox, apply 'display: flex', 'justify-content: center', and 'align-items: center' to the parent container. Alternatively, CSS Grid can be used..."
+    
+    Question: "Симптомы гриппа"
+    Hypothetical Snippet: "Клиническая картина гриппа характеризуется острым началом, повышением температуры тела до 38-40°C, ознобом, головной болью, миалгией и общей слабостью. Катаральные явления часто присоединяются позже..."
+
+    Hypothetical Snippet:
   max_tokens: 2048
 
 generator:

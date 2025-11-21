@@ -79,8 +79,8 @@ class QueryRewriter(PipelineModule):
         template = (
             f"{self.config.rewriter.prompt_template}\n\n"
             f"{instructions_escaped}\n\n"
-            "HyDE enabled: {{hyde_enabled}}\n"
-            "User question: {{query}}"
+            "HyDE enabled: {hyde_enabled}\n"
+            "User question: {query}"
         )
         return ChatPromptTemplate.from_template(template)
 

@@ -19,8 +19,8 @@ class HyDEGenerator(PipelineModule):
         llm_factory = LLMClientFactory(self.config)
         self._prompt = ChatPromptTemplate.from_template(
             f"{self.config.hyde.prompt_template}\n\n"
-            "Directive: {{directive}}\n"
-            "Original question: {{question}}",
+            "Directive: {directive}\n"
+            "Original question: {question}",
         )
         self._llm = llm_factory.build_chat_model(
             max_output_tokens=self.config.hyde.max_tokens,
