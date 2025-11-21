@@ -168,17 +168,7 @@ class RAGPipeline:
                 self._pipeline_logger.log_combined_count(len(combined))
         
         documents = combined
-        if self._parent_retriever.is_enabled():
-            with self._progress.stage("Parent page retrieval"):
-                documents = self._parent_retriever.retrieve_parent_pages(combined)
-                self._logger.info(
-                    "Parent page retriever returned %d parent documents",
-                    len(documents),
-                )
-                if self._pipeline_logger:
-                    self._pipeline_logger.log_parent_pages(documents)
-        
-        if self._reranker.is_enabled():
+        if self._reranker.is_enabled() and documents:
             with self._progress.stage("Reranking documents", f"{len(documents)} candidates"):
                 combined_with_scores = self._reranker.rerank_with_scores(query, documents)
                 documents = [doc for doc, _ in combined_with_scores]
@@ -186,6 +176,17 @@ class RAGPipeline:
                 
                 if self._pipeline_logger:
                     self._pipeline_logger.log_reranker(documents, scores)
+        
+        if self._parent_retriever.is_enabled() and documents:
+            with self._progress.stage("Parent page retrieval"):
+                parent_documents = self._parent_retriever.retrieve_parent_pages(documents)
+                self._logger.info(
+                    "Parent page retriever returned %d parent documents",
+                    len(parent_documents),
+                )
+                if self._pipeline_logger:
+                    self._pipeline_logger.log_parent_pages(parent_documents)
+                documents = parent_documents
         
         return documents
 

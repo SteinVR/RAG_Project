@@ -40,8 +40,8 @@ llm:
   api_key_env: "GOOGLE_API_KEY"
 
 modules:
-  rewriter: false
-  hyde: false
+  rewriter: true
+  hyde: true
   reranker: true
   parent_page_retriever: false
 
@@ -69,20 +69,20 @@ rewriter:
     Few-Shot Examples:
 
     User: "почему не заводится машина зимой?"
-    Result: {
+    Result: {{
       "rationale": "Subject: Car maintenance. Context: Automotive/Mechanics. Keywords: Battery, Spark plugs, Oil viscosity.",
       "rewrite_decision": "rewrite",
       "retriever_query": "машина не заводится зимой причины аккумулятор свечи масло стартер",
       "hyde_query": "Руководство по диагностике запуска двигателя при низких температурах"
-    }
+    }}
 
     User: "refund policy for digital goods"
-    Result: {
+    Result: {{
       "rationale": "Subject: E-commerce/Legal. Context: Terms of Service. Keywords: Return, Period, Exceptions.",
       "rewrite_decision": "rewrite",
       "retriever_query": "refund policy digital goods return terms non-refundable conditions",
       "hyde_query": "Standard terms and conditions regarding refunds for digital products"
-    }
+    }}
 
 hyde:
   enabled: true
