@@ -86,9 +86,10 @@ class LLMSettings(BaseModel):
 class ModuleToggles(BaseModel):
     """Feature flags for optional pipeline modules."""
 
-    rewriter: bool = Field(default=True)
-    hyde: bool = Field(default=True)
+    rewriter: bool = Field(default=False)
+    hyde: bool = Field(default=False)
     reranker: bool = Field(default=True)
+    parent_page_retriever: bool = Field(default=False)
 
 
 class RewriterSettings(BaseModel):

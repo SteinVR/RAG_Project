@@ -14,7 +14,7 @@ logging:
 ingestion:
   chunk_size: 800
   chunk_overlap: 150
-  retriever_k: 10
+  retriever_k: 15
   glob_patterns:
     - "*.pdf"
     - "*.txt"
@@ -28,69 +28,85 @@ vector_store:
 embeddings:
   model_name: "BAAI/bge-m3"
   # Device options: "cuda" (NVIDIA GPU), "mps" (Apple Silicon), "cpu", or "auto"
-  # Run: python AGENT_TOOLS/detect_device.py to find your optimal setting
   device: "mps"
   normalize_embeddings: true
 
 llm:
   provider: "google"
-  model_name: "models/gemini-flash-lite-latest"
+  model_name: "models/gemini-flash-latest"
   temperature: 0.2
-  max_output_tokens: 2048
+  max_output_tokens: 8192
   api_key_env: "GOOGLE_API_KEY"
 
 modules:
-  rewriter: true
-  hyde: true
+  rewriter: false
+  hyde: false
   reranker: true
+  parent_page_retriever: true
 
 rewriter:
   enabled: true
   prompt_template: |-
-    You run the Query Rewrite Guard for a retrieval-augmented QA system.
-    Objectives:
-      1. Decide whether the user's wording must be rewritten before dense retrieval.
-      2. When HyDE is enabled (`hyde_enabled=true`), craft a concise directive for the HyDE generator.
-    Guardrails:
-      - Never invent facts, identifiers, version numbers, or file names that the user did not supply.
-      - Prefer the original wording when it is already specific (contains key entities, file names, error codes, or metrics).
-      - Rewrite only to expand acronyms, resolve pronouns, or add neutral descriptors (e.g., replace "our product" with "the product described in the documentation").
-      - Keep every output self-contained and under 40 words.
-    Output schema (see format instructions):
-      - `rewrite_decision`: `use_original` or `rewrite`.
-      - `retriever_query`: final query for the dense retriever.
-      - `hyde_query`: when HyDE is enabled, supply a short imperative such as "Produce a hypothetical answer about …"; leave empty when HyDE is disabled.
-      - `rationale`: <= 20 words explaining the choice.
-    Procedure:
-      - Identify missing context or ambiguous pronouns and only add neutral clarifications grounded in the question.
-      - If the query is already explicit, keep it unchanged.
-      - HyDE directives must stay broad enough to match multiple documents and must not introduce new fictional facts.
+    You are an expert Search Query Optimizer. Your goal is to refine user questions for a semantic search engine.
+
+    Input Analysis:
+    1. Read the user's query carefully.
+    2. Identify ambiguous pronouns (it, he, they), missing context, or casual phrasing.
+    3. Detect the language of the user's query.
+
+    Actions:
+    - If the query is specific and clear (contains identifiers, specific terms, names like "Loginov", "GOST", "ISO"):
+      Set "rewrite_decision" to "use_original".
+    - If the query is vague or relies on previous context that is missing:
+      Rewrite it to be self-contained and specific.
+      CRITICAL: The rewritten query MUST be in the SAME LANGUAGE as the original user query.
+
+    HyDE Directive (only if {{hyde_enabled}} is true):
+    - Create a short instruction for a technical writer to draft an answer document.
+    - Example: "Write a technical description of the X standard."
+
+    Output Format:
+    Return strictly a JSON object matching the provided schema.
+    - rationale: Brief explanation of why you rewrote or kept the original.
+    - retriever_query: Self-contained query to send to the dense retriever.
+    - hyde_query: Directive for the HyDE module when enabled, else empty.
 
 hyde:
   enabled: true
   prompt_template: |-
-    You are the HyDE imagination helper. Combine the provided directive (if any) with the original question to draft a hypothetical answer.
-    Requirements:
-      - Write 2 short sentences that could plausibly appear in neutral technical documentation.
-      - Mention the core subject and one or two salient facts or steps.
-      - Use only broadly known knowledge or information implied by the inputs; never invent internal names or proprietary data.
-      - Keep the tone factual and avoid bullet points or citations. The text will be embedded for retrieval only.
-  max_tokens: 256
+    You are an Expert Technical Writer tasked with drafting a snippet for a documentation knowledge base.
+    
+    Task:
+    Based on the User Question and the optional Directive, write a HYPOTHETICAL document passage that answers the question.
+    
+    Rules:
+    1. Do NOT converse with the user. Do NOT say "Here is the answer".
+    2. Write only the content of the hypothetical document passage.
+    3. Use professional, technical language.
+    4. Include plausible keywords related to the topic (e.g., standard codes, technical terms).
+    5. Keep it under 5-6 sentences.
+    6. MUST be in the SAME LANGUAGE as the Original Question.
+
+    Context:
+  max_tokens: 2048
 
 generator:
-  max_context_documents: 4
+  max_context_documents: 8
   answer_prompt: |-
-    You are the final synthesis model in a Retrieval-Augmented QA assistant.
-    Use only the supplied context snippets.
+    You are a precise QA Assistant responsible for answering questions based ONLY on the provided Context Documents.
+
     Instructions:
-      - Start with a concise paragraph that directly answers the question.
-      - When multiple takeaways exist, follow with a short bulleted list (max 4 bullets).
-      - Attribute every factual statement with a citation formatted as [source:<index>] where <index> matches the numbered context block.
-      - If the answer cannot be found in the context, say so explicitly and avoid speculation.
+    1. Analyze the User Question and the provided Context snippets.
+    2. Synthesize an answer based strictly on the facts found in the Context.
+    3. If the Context does not contain the answer, state: "The provided documents do not contain information to answer this question." Do not make up information.
+    4. Always cite your sources using the format [source_filename (p.X)].
+    5. Maintain the language of the User Question in your response.
+
+    Tone: Professional, factual, concise.
   citations_required: true
 
 reranker:
   enabled: true
   model_name: "BAAI/bge-reranker-v2-m3"
-  top_k: 5
+  top_k: 8
 

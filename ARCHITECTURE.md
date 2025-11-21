@@ -32,10 +32,35 @@ It is designed for **local usage**, efficiently handling document indexing, pers
             - (Optional) HyDE generates hypothetical answer -> embedded -> searched.
         3.  *Post-Processing*:
             - Results are deduplicated.
-            - (Optional) Reranker scores and sorts results.
-        4.  *Generation*: Top context chunks are sent to LLM to generate the final answer.
+            - (Optional) **Parent Page Retriever** replaces chunks with full parent pages.
+            - (Optional) Reranker scores and sorts results (chunks or pages).
+        4.  *Generation*: Top context (chunks or pages) is sent to LLM to generate the final answer.
     - System prints the answer and citations.
 5.  **Termination**: User types `exit` or `quit`.
+
+## 3a. Parent Page Retriever Concept
+
+**Motivation:**  
+Standard chunking breaks documents into small fragments for semantic search. However, chunks may lack surrounding context, leading to incomplete answers. The **Parent Page Retriever** addresses this by replacing retrieved chunks with their full parent pages before reranking.
+
+**Workflow:**
+1.  After base retrieval and HyDE retrieval, the system obtains a list of candidate chunks.
+2.  Chunks are deduplicated (by `chunk_id`).
+3.  (Optional) **Parent Page Retriever** activates:
+    - Groups all chunks by `(source, page)` metadata.
+    - For each unique page, reconstructs the full page Document using `parent_page_content` stored in chunk metadata.
+    - Returns a list of parent pages instead of individual chunks.
+4.  The Reranker then scores these pages (or chunks, if Parent Retriever is disabled).
+5.  The Generator uses top-ranked pages (or chunks) to produce the final answer.
+
+**Trade-offs:**
+- **Pros:** Richer context for LLM; fewer but more complete documents; better for complex questions.
+- **Cons:** Larger context size (may exceed LLM token limits); less granular retrieval; duplicates page content in chunk metadata.
+
+**Implementation Strategy:**
+- Store full parent page content in each chunk's metadata (`parent_page_content`, `parent_doc_id`).
+- Create a new module `src/modules/parent_retriever.py` that implements the grouping and reconstruction logic.
+- Add a configuration flag `modules.parent_page_retriever: true/false`.
 
 ## 4. Technical Decisions
 - **Language**: Python 3.10+.
@@ -56,19 +81,23 @@ It is designed for **local usage**, efficiently handling document indexing, pers
 - **`Pipeline`**: The orchestrator that holds references to active modules and runs the `execute(query)` flow.
 
 ### B. Data Layer (`src/ingestion/`)
-- **`DocumentLoader`**: Scans directories, parses PDFs/TXTs into `Document` objects.
+- **`DocumentLoader`**: Scans directories, parses PDFs/TXTs into `Document` objects (one Document per page).
 - **`VectorStoreManager`**:
     - Manages ChromaDB instance.
     - Handles **Incremental Indexing**:
-        - `get_indexed_files()`: Returns list of already indexed source files.
-        - `add_documents()`: Adds new docs.
-    - *Note*: We will simplify from `ParentDocumentRetriever` to standard `RecursiveCharacterTextSplitter` + Metadata for MVP modularity, unless Parent Retrieval is strictly required. *Decision: Stick to standard retrieval for robustness in this refactor, or use Chroma's native metadata for source tracking.*
+        - Uses `FileRegistry` to track indexed files via checksums.
+        - Only indexes new or modified files.
+    - **Chunking Strategy**:
+        - Uses `RecursiveCharacterTextSplitter` to split parent pages into chunks.
+        - Each chunk stores metadata: `source`, `page`, `chunk_id`, `doc_id`.
+        - (Optional) If `parent_page_retriever` is enabled: stores full parent page content in chunk metadata (`parent_page_content`, `parent_doc_id`) to support page reconstruction.
 
 ### C. RAG Modules (`src/modules/`)
 All modules should inherit from a base interface where applicable.
 - **`QueryRewriter`**: Uses LLM to classify/rewrite queries.
 - **`HyDEGenerator`**: Uses LLM to hallucinate an answer for retrieval.
-- **`Reranker`**: Uses Cross-Encoder to re-score retrieved docs.
+- **`ParentPageRetriever`**: Groups retrieved chunks by source page and replaces them with full page content.
+- **`Reranker`**: Uses Cross-Encoder to re-score retrieved docs (chunks or pages).
 - **`Generator`**: The final RAG synthesizer (Context + Question -> Answer).
 
 ### D. Main Entry (`main.py`)
@@ -95,8 +124,10 @@ project_root/
 │   │   ├── loader.py
 │   │   └── vector_store.py
 │   ├── modules/
+│   │   ├── base.py
 │   │   ├── generator.py
 │   │   ├── hyde.py
+│   │   ├── parent_retriever.py   # NEW: Parent Page Retriever
 │   │   ├── reranker.py
 │   │   └── rewriter.py
 │   └── utils/
@@ -105,14 +136,41 @@ project_root/
 └── requirements.txt
 ```
 
-## 7. Key Conventions & Logging
+## 7. Pipeline Data Flow (with Parent Page Retriever)
+
+```
+User Query
+    ↓
+[QueryRewriter] → Refined Query + HyDE Seed
+    ↓
+[Base Retrieval] → Candidate Chunks (k=15)
+    ↓
+[HyDE Generator] → Hypothetical Answer
+    ↓
+[HyDE Retrieval] → Additional Chunks
+    ↓
+[Deduplication] → Unique Chunks (by chunk_id)
+    ↓
+[ParentPageRetriever] → Parent Pages (if enabled)
+    |                    Groups chunks by (source, page)
+    |                    Reconstructs full page Documents
+    ↓
+[Reranker] → Top-K Scored Documents (chunks or pages)
+    ↓
+[Generator] → Final Answer + Citations
+```
+
+**Key Decision Point:**  
+The `ParentPageRetriever` sits **between Deduplication and Reranker**. When enabled, it transforms the document list from granular chunks to complete pages, allowing the Reranker to score holistic page-level relevance instead of fragment-level relevance.
+
+## 8. Key Conventions & Logging
 
 - **Modularity:** Code must be logically separated into classes and modules within `src/`.
 - **Logging:** All significant events must be logged to `logs/prototype.log`.
     - **Format:** `[YYYY-MM-DD HH:MM:SS] [LEVEL] - Message`
 - **Tools:** Reusable scripts created during development should be saved in `AGENT_TOOLS/`.
 
-## 8. Legacy Code Analysis & Migration Strategy
+## 9. Legacy Code Analysis & Migration Strategy
 
 The legacy code (`legacy/RAG_Prototype_6.1.py`) contains valuable logic but suffers from monolithic structure and lack of persistence. The Lead Engineer is encouraged to **adapt** working snippets but **rewrite** the architecture.
 

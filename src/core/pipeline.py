@@ -11,6 +11,7 @@ from src.core.config import AppConfig, ConfigManager
 from src.ingestion.vector_store import VectorStoreManager
 from src.modules.generator import Generator, AnswerSchema
 from src.modules.hyde import HyDEGenerator
+from src.modules.parent_retriever import ParentPageRetriever
 from src.modules.reranker import Reranker
 from src.modules.rewriter import QueryRewriter, RewriteResult
 from src.utils.console import ConsoleProgress
@@ -42,6 +43,7 @@ class RAGPipeline:
         self._vector_store_manager = VectorStoreManager(self._config)
         self._rewriter = QueryRewriter(self._config)
         self._hyde = HyDEGenerator(self._config)
+        self._parent_retriever = ParentPageRetriever(self._config)
         self._reranker = Reranker(self._config)
         self._generator = Generator(self._config)
         self._retriever = None
@@ -71,6 +73,7 @@ class RAGPipeline:
                 rewriter_enabled=self._rewriter.is_enabled(),
                 hyde_enabled=self._hyde.is_enabled(),
                 reranker_enabled=self._reranker.is_enabled(),
+                parent_retriever_enabled=self._parent_retriever.is_enabled(),
             )
         
         with self._progress.stage("Processing query"):
@@ -154,16 +157,27 @@ class RAGPipeline:
             if self._pipeline_logger:
                 self._pipeline_logger.log_combined_count(len(combined))
         
+        documents = combined
+        if self._parent_retriever.is_enabled():
+            with self._progress.stage("Parent page retrieval"):
+                documents = self._parent_retriever.retrieve_parent_pages(combined)
+                self._logger.info(
+                    "Parent page retriever returned %d parent documents",
+                    len(documents),
+                )
+                if self._pipeline_logger:
+                    self._pipeline_logger.log_parent_pages(documents)
+        
         if self._reranker.is_enabled():
-            with self._progress.stage("Reranking documents", f"{len(combined)} candidates"):
-                combined_with_scores = self._reranker.rerank_with_scores(query, combined)
-                combined = [doc for doc, _ in combined_with_scores]
+            with self._progress.stage("Reranking documents", f"{len(documents)} candidates"):
+                combined_with_scores = self._reranker.rerank_with_scores(query, documents)
+                documents = [doc for doc, _ in combined_with_scores]
                 scores = [score for _, score in combined_with_scores]
                 
                 if self._pipeline_logger:
-                    self._pipeline_logger.log_reranker(combined, scores)
+                    self._pipeline_logger.log_reranker(documents, scores)
         
-        return combined
+        return documents
 
     def _invoke_retriever(self, query: str) -> Sequence[Document]:
         assert self._retriever is not None

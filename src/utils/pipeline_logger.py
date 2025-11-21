@@ -25,7 +25,7 @@ class RetrievalResult:
     def from_document(cls, doc: Document, score: Optional[float] = None) -> RetrievalResult:
         """Create from LangChain Document."""
         metadata = doc.metadata or {}
-        content_preview = doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+        content_preview = doc.page_content[:1000] + "..." if len(doc.page_content) > 1000 else doc.page_content
         return cls(
             doc_id=metadata.get("chunk_id", "unknown"),
             source=metadata.get("source", "unknown"),
@@ -52,9 +52,11 @@ class PipelineLog:
     hyde_retrieval_results: List[RetrievalResult] = None
     combined_results_count: int = 0
     reranker_enabled: bool = False
+    parent_retriever_enabled: bool = False
     reranker_scores: Optional[List[Dict[str, Any]]] = None
     final_chunks: List[RetrievalResult] = None
     final_answer: Optional[str] = None
+    parent_page_results: List[RetrievalResult] = None
     
     def __post_init__(self) -> None:
         if self.base_retrieval_results is None:
@@ -63,6 +65,8 @@ class PipelineLog:
             self.hyde_retrieval_results = []
         if self.final_chunks is None:
             self.final_chunks = []
+        if self.parent_page_results is None:
+            self.parent_page_results = []
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -77,7 +81,14 @@ class PipelineLogger:
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.current_log: Optional[PipelineLog] = None
     
-    def start_query(self, query: str, rewriter_enabled: bool, hyde_enabled: bool, reranker_enabled: bool) -> None:
+    def start_query(
+        self,
+        query: str,
+        rewriter_enabled: bool,
+        hyde_enabled: bool,
+        reranker_enabled: bool,
+        parent_retriever_enabled: bool,
+    ) -> None:
         """Initialize a new query log."""
         self.current_log = PipelineLog(
             timestamp=datetime.now().isoformat(),
@@ -85,6 +96,7 @@ class PipelineLogger:
             rewriter_enabled=rewriter_enabled,
             hyde_enabled=hyde_enabled,
             reranker_enabled=reranker_enabled,
+            parent_retriever_enabled=parent_retriever_enabled,
         )
     
     def log_rewriter(self, decision: str, retriever_query: str, hyde_seed: str, rationale: str) -> None:
@@ -118,6 +130,13 @@ class PipelineLogger:
         """Log combined deduplicated results count."""
         if self.current_log:
             self.current_log.combined_results_count = count
+    
+    def log_parent_pages(self, documents: List[Document]) -> None:
+        """Log parent page consolidation results."""
+        if self.current_log:
+            self.current_log.parent_page_results = [
+                RetrievalResult.from_document(doc) for doc in documents
+            ]
     
     def log_reranker(self, documents: List[Document], scores: List[float]) -> None:
         """Log reranker scores."""
@@ -181,6 +200,7 @@ class PipelineLogger:
             f"Rewriter enabled: {log.rewriter_enabled}",
             f"HyDE enabled: {log.hyde_enabled}",
             f"Reranker enabled: {log.reranker_enabled}",
+            f"Parent retriever enabled: {log.parent_retriever_enabled}",
             "",
         ]
         
@@ -230,6 +250,17 @@ class PipelineLogger:
             f"After deduplication: {log.combined_results_count} unique documents",
             "",
         ])
+        
+        if log.parent_retriever_enabled:
+            lines.extend([
+                "PARENT PAGE RETRIEVAL",
+                "-" * 80,
+                f"Parent pages returned: {len(log.parent_page_results)}",
+            ])
+            for i, result in enumerate(log.parent_page_results, 1):
+                lines.append(f"  {i}. {result.source} (p.{result.page}) - {result.doc_id}")
+                lines.append(f"     {result.content_preview}")
+            lines.append("")
         
         if log.reranker_enabled and log.reranker_scores:
             lines.extend([

@@ -9,5 +9,10 @@ src/__pycache__/
 
 AGENT_DESCRIPTION/
 AGENT_TOOLS/
+AGENT_REPORTS/
+ARCHITECTURE.md
+TASK.md
+
 logs/
 data/
+legacy/

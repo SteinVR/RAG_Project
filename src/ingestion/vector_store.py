@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -95,6 +95,7 @@ class VectorStoreManager:
         self._logger = get_logger(self.__class__.__name__)
         self._loader = loader or DocumentLoader(self._config)
         self._registry = FileRegistry(self._config.paths.file_registry)
+        self._parent_retriever_enabled = self._config.modules.parent_page_retriever
         self._splitter = RecursiveCharacterTextSplitter(
             chunk_size=self._config.ingestion.chunk_size,
             chunk_overlap=self._config.ingestion.chunk_overlap,
@@ -178,16 +179,54 @@ class VectorStoreManager:
             if not documents:
                 continue
             self._clear_existing_source(vector_store, rel_path)
+            parent_metadata: Dict[str, Dict[str, Any]] = {}
             for doc in documents:
                 metadata = doc.metadata or {}
                 metadata["file_path"] = rel_path
                 metadata["checksum"] = snapshot["checksum"]
+                if self._parent_retriever_enabled:
+                    parent_payload = {
+                        "parent_page_content": doc.page_content,
+                        "parent_doc_id": metadata.get("doc_id"),
+                        "parent_source": metadata.get("source", rel_path),
+                        "parent_page": metadata.get("page", 0),
+                    }
+                    metadata.update(parent_payload)
+                    doc_id = parent_payload["parent_doc_id"]
+                    if doc_id:
+                        parent_metadata[str(doc_id)] = parent_payload
                 doc.metadata = metadata
             chunks = self._splitter.split_documents(documents)
             for index, chunk in enumerate(chunks):
                 chunk.metadata.setdefault("file_path", rel_path)
                 chunk.metadata.setdefault("checksum", snapshot["checksum"])
                 chunk.metadata["chunk_id"] = f"{chunk.metadata.get('doc_id', 'doc')}-{index}"
+                if self._parent_retriever_enabled:
+                    parent_doc_id = chunk.metadata.get("parent_doc_id") or chunk.metadata.get("doc_id")
+                    parent_payload = parent_metadata.get(str(parent_doc_id)) if parent_doc_id else None
+                    if parent_payload:
+                        chunk.metadata.setdefault(
+                            "parent_page_content",
+                            parent_payload["parent_page_content"],
+                        )
+                        chunk.metadata.setdefault(
+                            "parent_doc_id",
+                            parent_payload["parent_doc_id"],
+                        )
+                        chunk.metadata.setdefault(
+                            "parent_source",
+                            parent_payload["parent_source"],
+                        )
+                        chunk.metadata.setdefault(
+                            "parent_page",
+                            parent_payload["parent_page"],
+                        )
+                    else:
+                        self._logger.debug(
+                            "Missing parent metadata for chunk %s (%s)",
+                            chunk.metadata.get("chunk_id"),
+                            rel_path,
+                        )
             if chunks:
                 self._logger.info(
                     "Adding %d chunks from %s",
