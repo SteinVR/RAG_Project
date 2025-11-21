@@ -18,6 +18,7 @@ def _write_config_file(
     log_file: Path,
     *,
     level: str = "DEBUG",
+    extended: bool = True,
 ) -> None:
     """Create a fully-populated settings file pointing at a temp directory."""
     config_template = f"""
@@ -32,6 +33,7 @@ logging:
   format: "[%(levelname)s] %(message)s"
   file: "{log_file}"
   console: false
+  extended: {"true" if extended else "false"}
 ingestion:
   chunk_size: 1000
   chunk_overlap: 10

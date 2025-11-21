@@ -35,11 +35,21 @@ class PipelineResult:
 class RAGPipeline:
     """High-level orchestrator used by the CLI or other front-ends."""
 
-    def __init__(self, config: Optional[AppConfig] = None, show_progress: bool = True, enable_pipeline_logging: bool = False) -> None:
+    def __init__(
+        self,
+        config: Optional[AppConfig] = None,
+        show_progress: bool = True,
+        enable_pipeline_logging: Optional[bool] = None,
+    ) -> None:
         self._config = config or ConfigManager.load().settings
         self._logger = get_logger(self.__class__.__name__)
         self._progress = ConsoleProgress(enabled=show_progress)
-        self._pipeline_logger = PipelineLogger() if enable_pipeline_logging else None
+        pipeline_logging_enabled = (
+            enable_pipeline_logging
+            if enable_pipeline_logging is not None
+            else self._config.logging.extended
+        )
+        self._pipeline_logger = PipelineLogger() if pipeline_logging_enabled else None
         self._vector_store_manager = VectorStoreManager(self._config)
         self._rewriter = QueryRewriter(self._config)
         self._hyde = HyDEGenerator(self._config)

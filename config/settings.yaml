@@ -10,6 +10,7 @@ logging:
   level: "INFO"
   format: "[%(asctime)s] [%(levelname)s] %(name)s - %(message)s"
   file: "logs/prototype.log"
+  extended: true
 
 ingestion:
   chunk_size: 800
@@ -42,7 +43,7 @@ modules:
   rewriter: false
   hyde: false
   reranker: true
-  parent_page_retriever: true
+  parent_page_retriever: false
 
 rewriter:
   enabled: true

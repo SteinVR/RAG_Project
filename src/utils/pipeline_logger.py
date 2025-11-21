@@ -76,7 +76,7 @@ class PipelineLog:
 class PipelineLogger:
     """Logger for detailed pipeline execution tracking."""
     
-    def __init__(self, log_dir: str = "logs/pipeline") -> None:
+    def __init__(self, log_dir: str = "logs/Pipeline") -> None:
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.current_log: Optional[PipelineLog] = None

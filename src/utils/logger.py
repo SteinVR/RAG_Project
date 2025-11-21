@@ -22,8 +22,16 @@ def configure_logging(config: Optional[AppConfig] = None) -> None:
             return
         settings = config or ConfigManager.load().settings
         log_settings = settings.logging
-        log_settings.ensure_directories()
+        root_logger = logging.getLogger()
+        root_logger.handlers.clear()
 
+        if not log_settings.extended:
+            root_logger.addHandler(logging.NullHandler())
+            root_logger.setLevel(logging.CRITICAL)
+            _CONFIGURED = True
+            return
+
+        log_settings.ensure_directories()
         formatter = logging.Formatter(log_settings.format)
         file_handler = logging.FileHandler(log_settings.file, encoding="utf-8")
         file_handler.setFormatter(formatter)
@@ -34,8 +42,6 @@ def configure_logging(config: Optional[AppConfig] = None) -> None:
             console_handler.setFormatter(formatter)
             handlers.append(console_handler)
 
-        root_logger = logging.getLogger()
-        root_logger.handlers.clear()
         for handler in handlers:
             root_logger.addHandler(handler)
 

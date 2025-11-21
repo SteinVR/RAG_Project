@@ -35,11 +35,14 @@ class LoggingSettings(BaseModel):
     )
     file: Path = Field(default=Path("logs/prototype.log"))
     console: bool = Field(default=True)
+    extended: bool = Field(default=False)
 
     model_config = ConfigDict(validate_assignment=True)
 
     def ensure_directories(self) -> None:
         """Create the log directory and file placeholder."""
+        if not self.extended:
+            return
         self.file.parent.mkdir(parents=True, exist_ok=True)
         if not self.file.exists():
             self.file.touch()
@@ -144,7 +147,8 @@ class AppConfig(BaseModel):
     def materialize(self) -> None:
         """Ensure required directories exist and derived fields are populated."""
         self.paths.ensure_directories()
-        self.logging.ensure_directories()
+        if self.logging.extended:
+            self.logging.ensure_directories()
         if self.vector_store.persist_directory is None:
             self.vector_store.persist_directory = self.paths.vector_store_dir
 

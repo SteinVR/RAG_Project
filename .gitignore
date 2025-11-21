@@ -14,5 +14,6 @@ ARCHITECTURE.md
 TASK.md
 
 logs/
+tests/
 data/
 legacy/
