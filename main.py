@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Iterable
 
 from dotenv import load_dotenv
@@ -24,6 +25,16 @@ def format_answer(result: PipelineResult) -> str:
             answer_lines.append(
                 f"- {citation.document} (p.{citation.page}): {citation.text}",
             )
+    if getattr(result.answer, "relevant_sources", None):
+        answer_lines.append("\nRelevantSources = [")
+        for source in result.answer.relevant_sources:
+            payload = {
+                "source": source.source,
+                "page": source.page,
+                "snippet": source.snippet.replace("\n", " "),
+            }
+            answer_lines.append(f"  {json.dumps(payload, ensure_ascii=False)}")
+        answer_lines.append("]")
     return "\n".join(answer_lines)
 
 

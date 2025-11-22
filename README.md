@@ -1,251 +1,106 @@
 # Modular RAG Console
 
-Retrieval-Augmented Generation console app that assembles a configurable pipeline (Rewriter → HyDE → Retriever → Reranker → Generator) around a persistent local Chroma vector store.
+Retrieval-Augmented Generation console app built around a configurable pipeline (Rewriter → HyDE → Retriever → Reranker → Generator) and a persistent Chroma vector store.
 
-## Features
-- Config-driven pipeline defined in `config/settings.yaml`.
-- Incremental ingestion with checksum-based file registry to avoid duplicate chunks.
-- Optional Query Rewriter, HyDE bootstrapper, and Cross-Encoder reranker.
-- Streaming-ready integration with Google Gemini via the native `google-genai` SDK.
-- **Hardware-optimized**: Automatic GPU acceleration for Apple Silicon (MPS) and NVIDIA (CUDA).
-- Instrumented logging (`logs/prototype.log`) for observability.
-
-## Quick Reference: Platform-Specific Setup
-
-| Platform | Hardware | PyTorch Installation | Config Setting |
-|----------|----------|---------------------|----------------|
-| macOS | M1/M2/M3 | `uv pip install torch torchvision torchaudio` | `device: "mps"` |
-| Windows/Linux | NVIDIA GPU | `uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124` | `device: "cuda"` |
-| Any | CPU only | `uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu` | `device: "cpu"` |
-| Any | Auto-detect | Install PyTorch for your platform | `device: "auto"` |
-
-**Verification:** Run `uv run python -m src.utils.check_device` to verify your setup.
+## Environment Setup
+1. Install uv  
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+2. Sync dependencies  
+   ```bash
+   uv sync
+   ```
+3. Install PyTorch (pick one)
+   - Apple Silicon  
+     ```bash
+     uv pip install torch torchvision torchaudio
+     ```  
+   - NVIDIA CUDA  
+     ```bash
+     uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+     ```  
+   - CPU only  
+     ```bash
+     uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+     ```
+4. Verify device mapping (optional)  
+   ```bash
+   uv run python -m src.utils.check_device
+   ```
+5. Set Google Gemini credentials  
+   ```bash
+   export GOOGLE_API_KEY="your-api-key"
+   ```
+6. Drop PDFs/TXTs/MDs in `data/docs/`.
+7. Launch  
+   ```bash
+   uv run python main.py
+   ```
 
 ## Project Layout
 ```
-├── config/                # Settings, API key template
-├── data/docs/             # Source documents to ingest
-├── data/vector_store/     # Chroma persistence
+├── config/
+│   └── settings.yaml      # Pipeline config, model settings, API keys
+├── data/
+│   ├── docs/              # Source documents (PDFs, TXTs, MDs)
+│   ├── vector_store/      # Chroma persistence (auto-created)
+│   └── file_registry.json # Incremental indexing state (auto-created)
+├── logs/
+│   ├── prototype.log      # Application logs
+│   └── pipeline/          # Query execution artifacts (JSON + TXT)
 ├── src/
-│   ├── core/              # Config + pipeline orchestrator
-│   ├── ingestion/         # Loader + vector store manager
-│   ├── modules/           # Rewriter, HyDE, Reranker, Generator
-│   └── utils/             # Logging helpers
+│   ├── core/
+│   │   ├── config.py      # Pydantic config loader
+│   │   └── pipeline.py    # RAGPipeline orchestrator
+│   ├── ingestion/
+│   │   ├── loader.py      # DocumentLoader (PDF/TXT/MD)
+│   │   └── vector_store.py # VectorStoreManager, FileRegistry
+│   ├── modules/
+│   │   ├── base.py        # PipelineModule, LLMClientFactory
+│   │   ├── generator.py   # Final answer generator
+│   │   ├── hyde.py        # HyDE hypothetical document generator
+│   │   ├── parent_retriever.py # Chunk-to-page reconstruction
+│   │   ├── reranker.py    # CrossEncoder reranker
+│   │   └── rewriter.py    # Query rewriter
+│   └── utils/
+│       ├── check_device.py # Hardware detection utility
+│       ├── console.py     # Progress display
+│       ├── device.py      # Device resolution logic
+│       ├── logger.py      # Logging setup
+│       └── pipeline_logger.py # Structured pipeline logging
+├── tests/                 # Pytest test suite
 ├── main.py                # CLI entry point
-├── pyproject.toml         # Dependency graph (managed by uv)
-└── requirements.txt       # Convenience shim (`pip install -r requirements.txt`)
+├── pyproject.toml         # Project metadata + dependencies (uv)
+└── uv.lock                # Lockfile (uv-managed)
 ```
 
-## Environment Setup
+## Pipeline Overview
+- **Ingestion Layer**: `DocumentLoader` parses PDFs/TXTs/MDs; `VectorStoreManager` chunks content, stores embeddings in Chroma, and uses a checksum registry to skip unchanged files.
+- **Retrieval Layer**: Base retriever pulls nearest chunks; HyDE prompt can seed an auxiliary search; deduplication merges both result sets.
+- **Parent Page Retriever (optional)**: Replaces chunk lists with full source pages before reranking.
+- **Reranker**: Cross-Encoder scores remaining candidates.
+- **Generator**: Gemini-powered answer synthesizer that cites sources.
 
-### Step 1: Install uv Package Manager
-Install uv (one time):
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### Step 2: Install Base Dependencies
-Sync dependencies from `pyproject.toml`:
-```bash
-uv sync
-```
-This creates a virtual environment under `.venv` (managed by uv).
-
-### Step 3: Install PyTorch (Platform-Specific)
-
-The project uses PyTorch for embeddings and reranking. Choose the installation command based on your hardware for optimal performance.
-
-#### For macOS with Apple Silicon (M1/M2/M3)
-Install PyTorch with Metal Performance Shaders (MPS) support:
-```bash
-uv pip install torch torchvision torchaudio
-```
-This enables GPU acceleration via Apple's Metal framework.
-
-#### For Windows/Linux with NVIDIA GPU (e.g., RTX 4060)
-Install PyTorch with CUDA 12.4 support:
-```bash
-uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-```
-
-#### For CPU-Only Systems
-Install the CPU-only version:
-```bash
-uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-```
-
-#### Verify Installation
-```bash
-uv run python -m src.utils.check_device
-```
-This will confirm your PyTorch installation and recommend the optimal `device` setting for `config/settings.yaml`.
-
-### Step 4: Configure Device Acceleration
-Update `config/settings.yaml` to use your hardware accelerator:
-
-For **macOS M1/M2/M3**:
-```yaml
-embeddings:
-  device: "mps"  # Metal Performance Shaders
-```
-
-For **Windows/Linux with NVIDIA GPU**:
-```yaml
-embeddings:
-  device: "cuda"  # NVIDIA CUDA
-```
-
-For **CPU-only**:
-```yaml
-embeddings:
-  device: "cpu"
-```
-
-### Step 5: Configure API Keys
-Set your Google Gemini API key as an environment variable:
-```bash
-export GOOGLE_API_KEY="your-api-key-here"
-```
-Or create a `.env` file in the project root:
-```
-GOOGLE_API_KEY=your-api-key-here
-```
-
-### Step 6: Prepare Data
-- Drop PDFs/TXTs/MDs into `data/docs/`.
-- First run will chunk and index them into `data/vector_store/`.
-
-### Step 7: Launch the Application
-```bash
-uv run python main.py
-```
-Type your questions; use `exit` or `quit` to stop.
-
-## Performance Optimization
-
-### Hardware Acceleration
-The project uses GPU acceleration for:
-- **Embeddings**: BAAI/bge-m3 model (sentence-transformers)
-- **Reranking**: BAAI/bge-reranker-v2-m3 model (CrossEncoder)
-
-Expected performance improvements with GPU acceleration:
-- **M1/M2/M3 (MPS)**: 3-5x faster than CPU
-- **RTX 4060 (CUDA)**: 5-10x faster than CPU
-
-### Batch Size Tuning
-Adjust `vector_store.embedding_batch_size` in `config/settings.yaml` based on your GPU memory:
-
-| Device | VRAM | Recommended Batch Size |
-|--------|------|------------------------|
-| M1/M2 (8GB unified) | 8GB | 32-64 |
-| M1 Pro/Max (16-32GB) | 16-32GB | 64-128 |
-| RTX 4060 (8GB) | 8GB | 64-128 |
-| CPU | RAM | 16-32 |
-
-### Monitoring GPU Usage
-
-**macOS (Metal):**
-```bash
-sudo powermetrics --samplers gpu_power -i 1000
-```
-
-**Windows (CUDA):**
-```bash
-nvidia-smi -l 1
-```
-
-**Linux (CUDA):**
-```bash
-watch -n 1 nvidia-smi
-```
-
-### Troubleshooting
-
-**"CUDA out of memory" error:**
-- Reduce `embedding_batch_size` in `config/settings.yaml`
-- Close other GPU-intensive applications
-
-**"MPS backend not available" error:**
-- Verify macOS version is 12.3 or later
-- Update PyTorch: `uv pip install --upgrade torch`
-
-**Slow performance despite GPU:**
-- Verify `device` is set correctly in `config/settings.yaml`
-- Run `uv run python -m src.utils.check_device` to check configuration
-
-### Updating or Adding Dependencies
-- Edit the `dependencies` list in `pyproject.toml`.
-- Re-run `uv sync` to lock + install the updated graph.
-- The minimal `requirements.txt` simply points to the project (`-e .`) for `pip` compatibility, but uv should be the primary workflow.
+### Execution Flow
+1. `main.py` loads config and syncs the vector store.
+2. For each query, the pipeline conditionally runs Query Rewriter, HyDE, Retrieval, Parent Page Retriever, Reranker, and Generator.
+3. Responses stream to the console; detailed traces land in `logs/prototype.log` and per-query files under `logs/pipeline/`.
 
 ## Configuration Highlights
-- `config/settings.yaml` toggles modules (`modules.*`), adjusts chunk sizes, and selects Gemini model names.
-- Logging format/location lives under `logging.*`.
-- Change HyDE, prompt, or reranker settings without touching code.
+- `config/settings.yaml` toggles modules (`modules.rewriter`, `modules.hyde`, `modules.reranker`, `modules.parent_page_retriever`) and defines chunk sizes, batch sizes, and prompts.
+- `embeddings.device` selects `cpu`, `mps`, `cuda`, or `auto`.
+- HyDE, Rewriter, and Generator prompts live entirely in config for quick experimentation.
+- Logging format and destination are declared under `logging.*`.
 
-## Running the Pipeline
-1. `main.py` boots, loads config, configures logging, and syncs the vector store.
-2. Each query runs through:
-   - Query Rewriter (rewrite guard + HyDE directive) – optional.
-   - HyDE generator – optional hypothetical answer for better recall.
-   - Retriever (Chroma) merges base + HyDE queries and deduplicates results.
-   - Reranker (BAAI/bge-reranker-v2-m3) scores top documents – optional.
-   - Generator formats the final Markdown answer with citations.
-3. Output prints to the console; detailed traces are written to `logs/prototype.log`.
+## Operations
+- Run `uv run python -m src.utils.check_device` whenever hardware changes.
+- `data/file_registry.json` tracks source checksums; deleting it forces a full reindex.
+- `logs/prototype.log` captures high-level events, while `PipelineLogger` writes per-query JSON/text transcripts for regression analysis.
+- Update dependencies via `pyproject.toml` + `uv sync`.
 
-### Verifying GPU Acceleration
-When the application starts, check the logs for device initialization messages:
-
-```
-[2025-11-20 10:30:15] [INFO] VectorStoreManager - Initializing embeddings on device: mps
-[2025-11-20 10:30:18] [INFO] Reranker - Initializing reranker on device: mps
-```
-
-If you see `cpu` instead of `mps`/`cuda` despite having compatible hardware:
-1. Run `uv run python -m src.utils.check_device` to diagnose the issue
-2. Verify PyTorch installation: `uv run python -c "import torch; print(torch.__version__)"`
-3. Check `device` setting in `config/settings.yaml`
-
-## Migrating from Existing Installation
-
-If you already have the project installed with CPU-only PyTorch:
-
-1. **Backup your data** (optional):
-   ```bash
-   cp -r data/vector_store data/vector_store.backup
-   ```
-
-2. **Reinstall PyTorch** with GPU support:
-   
-   For **macOS M1/M2/M3**:
-   ```bash
-   uv pip uninstall torch torchvision torchaudio
-   uv pip install torch torchvision torchaudio
-   ```
-   
-   For **Windows/Linux with NVIDIA GPU**:
-   ```bash
-   uv pip uninstall torch torchvision torchaudio
-   uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-   ```
-
-3. **Update config**:
-   ```bash
-   # Run detection utility
-   uv run python -m src.utils.check_device
-   
-   # Update config/settings.yaml based on recommendations
-   ```
-
-4. **Verify**:
-   ```bash
-   uv run python main.py
-   # Check logs for "Initializing embeddings on device: mps" or "cuda"
-   ```
-
-**Note:** Your existing vector store and file registry will work without modification. The GPU acceleration only affects embedding computation speed, not stored data.
-
-## Next Steps
-- After environment setup, consider scripting evaluation prompts once test data and API keys are ready.
-- For deployment or batch workloads, the `RAGPipeline` in `src/core/pipeline.py` can be reused directly without the CLI.
-
+## Features
+- Config-driven, switchable pipeline defined in YAML.
+- Incremental ingestion with persistent Chroma vector store.
+- Optional Query Rewriter, HyDE bootstrapper, Parent Page Retriever, and Cross-Encoder reranker.
+- Gemini-based generator with citation enforcement.

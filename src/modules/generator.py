@@ -22,11 +22,24 @@ class Citation(BaseModel):
     text: str = Field(description="Quoted or paraphrased fragment.")
 
 
+class RelevantSource(BaseModel):
+    """Structured representation of a referenced context chunk."""
+
+    source: str = Field(description="Exact filename of the cited document.")
+    page: int = Field(description="Page number containing the snippet.")
+    snippet: str = Field(
+        description="Summary of the cited passage with newlines removed (target 100-200 chars, but flexible for safety).",
+        min_length=1,
+        max_length=2048,
+    )
+
+
 class AnswerSchema(BaseModel):
     """Structured final answer schema."""
 
     answer_markdown: str = Field(description="Markdown formatted response.")
     citations: List[Citation]
+    relevant_sources: List[RelevantSource]
 
 
 class Generator(PipelineModule):
