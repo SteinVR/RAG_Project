@@ -1,1 +1,0 @@
-A folder for storing, reusing and adapting third-party implementations useful for the project.
