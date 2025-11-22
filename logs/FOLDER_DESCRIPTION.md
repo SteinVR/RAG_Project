@@ -1,1 +1,0 @@
-A folder for monitoring project work, outputting and saving intermediate results for inspection and Feedback Loop.
