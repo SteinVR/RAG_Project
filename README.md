@@ -76,31 +76,22 @@ Retrieval-Augmented Generation console app built around a configurable pipeline 
 ```
 
 ## Pipeline Overview
-- **Ingestion Layer**: `DocumentLoader` parses PDFs/TXTs/MDs; `VectorStoreManager` chunks content, stores embeddings in Chroma, and uses a checksum registry to skip unchanged files.
-- **Retrieval Layer**: Base retriever pulls nearest chunks; HyDE prompt can seed an auxiliary search; deduplication merges both result sets.
-- **Parent Page Retriever (optional)**: Replaces chunk lists with full source pages before reranking.
-- **Reranker**: Cross-Encoder scores remaining candidates.
-- **Generator**: Gemini-powered answer synthesizer that cites sources.
+1. Ingestion Layer: `DocumentLoader` parses PDFs/TXTs/MDs; `VectorStoreManager` chunks content, stores embeddings in Chroma, and uses a checksum registry to skip unchanged files.
+2. Retrieval Layer: Base retriever pulls nearest chunks; HyDE prompt can seed an auxiliary search; deduplication merges both result sets.
+3. Parent Page Retriever: Replaces chunk lists with full source pages before reranking.
+4. Reranker: Cross-Encoder scores remaining candidates.
+5. Generator: Currently, only Google API models are supported.
 
-### Execution Flow
-1. `main.py` loads config and syncs the vector store.
-2. For each query, the pipeline conditionally runs Query Rewriter, HyDE, Retrieval, Parent Page Retriever, Reranker, and Generator.
-3. Responses stream to the console; detailed traces land in `logs/prototype.log` and per-query files under `logs/pipeline/`.
 
-## Configuration Highlights
-- `config/settings.yaml` toggles modules (`modules.rewriter`, `modules.hyde`, `modules.reranker`, `modules.parent_page_retriever`) and defines chunk sizes, batch sizes, and prompts.
-- `embeddings.device` selects `cpu`, `mps`, `cuda`, or `auto`.
-- HyDE, Rewriter, and Generator prompts live entirely in config for quick experimentation.
-- Logging format and destination are declared under `logging.*`.
+## Configuration
+`config/settings.yaml` toggles modules (`modules.rewriter`, `modules.hyde`, `modules.reranker`, `modules.parent_page_retriever`) and defines chunk sizes, batch sizes, and prompts.
+`embeddings.device` selects `cpu`, `mps`, `cuda`, or `auto`.
 
 ## Operations
 - Run `uv run python -m src.utils.check_device` whenever hardware changes.
 - `data/file_registry.json` tracks source checksums; deleting it forces a full reindex.
-- `logs/prototype.log` captures high-level events, while `PipelineLogger` writes per-query JSON/text transcripts for regression analysis.
-- Update dependencies via `pyproject.toml` + `uv sync`.
 
 ## Features
-- Config-driven, switchable pipeline defined in YAML.
-- Incremental ingestion with persistent Chroma vector store.
+- Switchable pipeline defined in YAML.
+- Citing sources for quick manual validation.
 - Optional Query Rewriter, HyDE bootstrapper, Parent Page Retriever, and Cross-Encoder reranker.
-- Gemini-based generator with citation enforcement.

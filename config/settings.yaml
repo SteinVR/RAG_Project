@@ -29,7 +29,7 @@ vector_store:
 embeddings:
   model_name: "BAAI/bge-m3"
   # Device options: "cuda" (NVIDIA GPU), "mps" (Apple Silicon), "cpu", or "auto"
-  device: "mps"
+  device: "auto"
   normalize_embeddings: true
 
 llm:
